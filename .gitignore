@@ -1,0 +1,5 @@
+.env
+logs
+Lavalink.jar
+__pycache__
+application.yml
