@@ -11,19 +11,20 @@ class MusicCog(commands.Cog):
     self.bot.add_listener(self.bot.music.voice_update_handler, 'on_socket_response')
     self.bot.music.add_event_hook(self.track_hook)
 
-  '''@commands.command(name='join')
+  @commands.command(name='join')
   async def join(self, ctx):
     print('join command worked')
     member = utils.find(lambda m: m.id == ctx.author.id, ctx.guild.members)
     if member is not None and member.voice is not None:
       vc = member.voice.channel
       player = self.bot.music.player_manager.create(ctx.guild.id, endpoint=str(ctx.guild.region))
-      if not player.is_connected:
-        player.store('channel', ctx.channel.id)
-        await self.connect_to(ctx.guild.id, str(vc.id))'''
+      '''if not player.is_connected:''' # codice originale
+      player.store('channel', ctx.channel.id)
+      await self.connect_to(ctx.guild.id, str(vc.id))
 
   @commands.command(name='play')
   async def play(self, ctx, *, query):
+    
     member = utils.find(lambda m: m.id == ctx.author.id, ctx.guild.members)
     if member is not None and member.voice is not None:
       vc = member.voice.channel
@@ -55,6 +56,10 @@ class MusicCog(commands.Cog):
       player.add(requester=ctx.author.id, track=track)
       if not player.is_playing:
         await player.play()
+      if player.queue:
+        embed = Embed()
+        embed.description = 'La tua canzone è in posizione: ' + str(len(player.queue))
+        await ctx.channel.send(embed=embed)
 
     except Exception as error:
       print(error)
@@ -85,12 +90,23 @@ class MusicCog(commands.Cog):
     if player.paused:
       embed = Embed()
       embed.description = 'Mi hai liberato col tuo Frutto del Diavolo!!'
+      await ctx.channel.send(embed=embed)
       await player.set_pause(False)
     elif player.is_playing:
       embed = Embed()
       embed.description = 'Mi hai fermato col tuo Frutto del Diavolo!!'
+      await ctx.channel.send(embed=embed)
       await player.set_pause(True)
 
+  @commands.command(name='leave')
+  async def leave(self, ctx):
+    embed = Embed()
+    embed.description = 'Ok vado dal parruchiere ciao'
+    player = self.bot.music.player_manager.get(ctx.guild.id)
+    await ctx.channel.send(embed=embed)
+    await self.connect_to(ctx.guild.id, None)
+    if player.is_playing:
+      await player.stop()
 
 
   async def track_hook(self, event):
