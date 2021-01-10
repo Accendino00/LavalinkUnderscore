@@ -2,6 +2,7 @@ from discord.ext import commands
 import lavalink
 from discord import utils
 from discord import Embed
+import discord
 
 class MusicCog(commands.Cog):
   def __init__(self, bot):
@@ -20,7 +21,9 @@ class MusicCog(commands.Cog):
       player = self.bot.music.player_manager.create(ctx.guild.id, endpoint=str(ctx.guild.region))
       '''if not player.is_connected:''' # codice originale
       player.store('channel', ctx.channel.id)
+      embed= discord.Embed(title='Bella vez')
       await self.connect_to(ctx.guild.id, str(vc.id))
+      await ctx.channel.send(embed=embed)
 
   @commands.command(name='play')
   async def play(self, ctx, *, query):
@@ -54,8 +57,15 @@ class MusicCog(commands.Cog):
       track = tracks[int(response.content)-1]
 
       player.add(requester=ctx.author.id, track=track)
+      
+
       if not player.is_playing:
         await player.play()
+
+      if track['info']['identifier'] == player.current.identifier:
+        embed= discord.Embed(title=player.current.title,description='Now playing',url=f"https://youtube.com/watch?v={player.current.identifier}")
+        await ctx.channel.send(embed=embed)
+      
       if player.queue:
         embed = Embed()
         embed.description = 'La tua canzone è in posizione: ' + str(len(player.queue))
@@ -83,6 +93,8 @@ class MusicCog(commands.Cog):
       embed.description = 'Hai usato la tua Vivre Card per skippare la canzone.'
       await ctx.channel.send(embed=embed)
       await player.skip()
+      embed= discord.Embed(title=player.current.title,description='Now playing',url=f"https://youtube.com/watch?v={player.current.identifier}")
+      await ctx.channel.send(embed=embed)
 
   @commands.command(name='pause')
   async def set_pause(self, ctx):
@@ -113,6 +125,7 @@ class MusicCog(commands.Cog):
     if isinstance(event, lavalink.events.QueueEndEvent):
       guild_id = int(event.player.guild_id)
       await self.connect_to(guild_id, None)
+    
       
   async def connect_to(self, guild_id: int, channel_id: str):
     ws = self.bot._connection._get_websocket(guild_id)
