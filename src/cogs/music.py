@@ -3,6 +3,7 @@ import lavalink
 from discord import utils
 from discord import Embed
 import discord
+import re
 
 class MusicCog(commands.Cog):
   def __init__(self, bot):
@@ -58,14 +59,13 @@ class MusicCog(commands.Cog):
 
       player.add(requester=ctx.author.id, track=track)
       
-
       if not player.is_playing:
         await player.play()
-
+        
       if track['info']['identifier'] == player.current.identifier:
         embed= discord.Embed(title=player.current.title,description='Now playing',url=f"https://youtube.com/watch?v={player.current.identifier}")
         await ctx.channel.send(embed=embed)
-      
+        
       if player.queue:
         embed = Embed()
         embed.description = 'La tua canzone è in posizione: ' + str(len(player.queue))
@@ -75,6 +75,10 @@ class MusicCog(commands.Cog):
       print(error)
   
 
+  
+  
+  
+  
   @commands.command(name='stop')
   async def stop(self, ctx):
     player = self.bot.music.player_manager.get(ctx.guild.id)
@@ -110,6 +114,16 @@ class MusicCog(commands.Cog):
       await ctx.channel.send(embed=embed)
       await player.set_pause(True)
 
+
+  @commands.command(name='resume')
+  async def resume(self, ctx):
+    player = self.bot.music.player_manager.get(ctx.guild.id)
+    if player.paused:
+      embed = Embed()
+      embed.description = 'Mi hai liberato col tuo Frutto del Diavolo!!'
+      await ctx.channel.send(embed=embed)
+      await player.set_pause(False)
+
   @commands.command(name='leave')
   async def leave(self, ctx):
     embed = Embed()
@@ -119,6 +133,21 @@ class MusicCog(commands.Cog):
     await self.connect_to(ctx.guild.id, None)
     if player.is_playing:
       await player.stop()
+
+  @commands.command(name='queue')
+  async def queue(self, ctx):
+    player = self.bot.music.player_manager.get(ctx.guild.id)
+    if player.queue:
+      i = 0
+      queue_list = ''
+      for track in player.queue:
+        i = i + 1
+        track2 = re.search("=.+?(?=identifier)", str(track))
+        queue_list = queue_list + f'{i}) {track2.group()[1:]}\n'
+      embed = Embed()
+      embed.description = queue_list
+      await ctx.channel.send(embed=embed)
+
 
 
   async def track_hook(self, event):
