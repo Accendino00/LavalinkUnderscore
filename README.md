@@ -1,2 +1,3 @@
-Using Lavalink and Java 11
+### Discord Music Bot, using Python
 
+Not working and not maintained anymore
